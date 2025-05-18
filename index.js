@@ -96,6 +96,14 @@ async function run() {
       res.send(result);
     })
 
+ //All search blood group
+    app.get('/bloodgroup', async (req, res) => {
+      const result = await bloodData.find().toArray();
+      res.send(result);
+
+
+    })
+
 
 
     //email find user data get 
