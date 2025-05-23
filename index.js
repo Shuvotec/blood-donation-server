@@ -12,7 +12,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 //const uri = "mongodb+srv://blood:0olzhDcCOH823CU7@cluster0.pwqz3ti.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_PASS}@cluster0.pwqz3ti.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -38,6 +38,19 @@ async function run() {
     const bloodData = db.collection("bloodgroup");
     const divisions = db.collection('alldevision');
     const createdonation = db.collection('createdonation');
+ 
+    // Admin
+    app.patch('/users/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+         $set: {
+            role: 'admin'
+         }
+      }
+      const result = await userCollectionall.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
 
 
     //createdonation
@@ -54,28 +67,58 @@ async function run() {
 
     })
 
-    // app.get('/createdonation/:email', async (req, res) => {
-    //   const email = req.params.email;
-    //   const query = { email: email };
-    //   const result = await createdonation.find(query).toArray();
-    //   res.send(result);
 
-    // })
- app.get('/createdonation/:email', async (req, res) => {
-  const email = req.params.email;
-  console.log('Getting donation requests for:', email);
+    app.get('/createdonation/:email', async (req, res) => {
+      const email = req.params.email;
+      console.log('Getting donation requests for:', email);
+
+      // Fix: Use the correct variable (email)
+      const query = { email: email };
+
+      const result = await createdonation.find(query).toArray();
+      //console.log('Results:', result);
+      res.send(result);
+    });
+
+    app.get('/createdonation/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await createdonation.findOne(query);
+      console.log(result)
+      res.send(result);
+    });
+
+    // put
+    app.put('/createdonation/users/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const result = await createdonation.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData }
+
+      )
+      res.send(result);
+    })
+
+
+    // DELETE - Remove a donation request by ID
+app.delete('/createdonation/:id', async (req, res) => {
+  const { id } = req.params; // Retrieve the ID from the URL parameters
   
-  // Fix: Use the correct variable (email)
-  const query = { email: email };
-  
-  const result = await createdonation.find(query).toArray();
-  console.log('Results:', result);
-  res.send(result);
+  try {
+    // Check if the donation request exists before attempting deletion
+    const result = await createdonation.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Donation request not found' });
+    }
+
+    res.status(200).json({ message: 'Donation request successfully deleted' });
+  } catch (error) {
+    console.error('Error deleting donation request:', error);
+    res.status(500).json({ error: 'Failed to delete donation request' });
+  }
 });
-
-
-
-
 
 
     app.post('/userall', async (req, res) => {
@@ -96,8 +139,8 @@ async function run() {
       res.send(result);
     })
 
- //All search blood group
-    app.get('/bloodgroup', async (req, res) => {
+    //All search blood group
+    app.get('/userall/:bloodgroup', async (req, res) => {
       const result = await bloodData.find().toArray();
       res.send(result);
 
