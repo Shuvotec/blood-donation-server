@@ -1,3 +1,4 @@
+
 require('dotenv').config();  // <-- Load environment variables from .env
 
 const express = require('express');
@@ -30,6 +31,66 @@ async function run() {
     const bloodData = db.collection("bloodgroup");
     const divisions = db.collection('alldevision');
     const createdonation = db.collection('createdonation');
+    const blog = db.collection('blogsall');
+
+
+    //blog Post
+    app.post('/blogsall', async (req, res) => {
+      const user = req.body;
+      const result = await blog.insertOne(user);
+      res.send(result);
+    });
+    //blog Get
+    app.get('/blogsall', async (req, res) => {
+      const result = await blog.find().toArray();
+      res.send(result);
+    })
+    //
+ // PATCH /blogs/:id/status
+app.patch('/blogs/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!['draft', 'published'].includes(status)) {
+    return res.status(400).json({ error: 'Invalid status value' });
+  }
+
+  try {
+    const result = await blog.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    const updatedBlog = await blog.findOne({ _id: new ObjectId(id) });
+    res.status(200).json(updatedBlog);
+  } catch (err) {
+    console.error('Error updating blog status:', err);
+    res.status(500).json({ error: 'Failed to update blog status' });
+  }
+});
+
+// DELETE /blogs/:id
+app.delete('/blogs/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await blog.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Blog not found' });
+    }
+
+    res.status(200).json({ message: 'Blog successfully deleted' });
+  } catch (err) {
+    console.error('Error deleting blog:', err);
+    res.status(500).json({ error: 'Failed to delete blog' });
+  }
+});
+
 
     // PATCH admin role
     app.patch('/users/admin/:id', async (req, res) => {
@@ -88,16 +149,40 @@ async function run() {
       res.send(result);
     });
 
+  //get blogsAll
+  app.get('/blogsall/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await blog.findOne(query);
+    res.send(result);
+    
+  })
+
+  //Update Blog All
+  app.patch('/blogsall/:id', async (req, res) => {
+  const id = req.params.id;
+  const updates = req.body;
+  const result = await blog.updateOne({ _id: new ObjectId(id) }, { $set: updates });
+  if (result.matchedCount === 0) return res.status(404).json({ message: 'Not found' });
+  const updated = await blog.findOne({ _id: new ObjectId(id) });
+  res.json(updated);
+});
+
     // UPDATE donation request by ID
-    app.put('/createdonation/users/:id', async (req, res) => {
-      const id = req.params.id;
-      const updatedData = req.body;
-      const result = await createdonation.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updatedData }
-      );
-      res.send(result);
+    app.patch('/createdonation/users/:id', async (req, res) => {
+      try {
+        const id = new ObjectId(req.params.id);
+        const result = await createdonation.updateOne({ _id: id }, { $set: req.body });
+        if (!result.matchedCount) return res.status(404).json({ message: 'Not found' });
+        const updated = await createdonation.findOne({ _id: id });
+        res.json(updated);
+      } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Server error' });
+      }
     });
+
+
 
     // DELETE donation request by ID
     app.delete('/createdonation/:id', async (req, res) => {
