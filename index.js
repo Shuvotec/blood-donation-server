@@ -44,7 +44,7 @@ async function run() {
       res.send(result);
     })
     //
- // PATCH /blogs/:id/status
+ // PATCH
 app.patch('/blogs/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -242,7 +242,7 @@ app.delete('/blogs/:id', async (req, res) => {
       res.send(result);
     });
 
-    // GET districts by division name query
+    // GET districts by division
     app.get('/district', async (req, res) => {
       const { division } = req.query;
       if (!division) {
@@ -256,7 +256,7 @@ app.delete('/blogs/:id', async (req, res) => {
       }
     });
 
-    // GET upazilas by district name query
+    // GET upazilas by district
     app.get('/upazila', async (req, res) => {
       const { district } = req.query;
       if (!district) {
@@ -281,7 +281,7 @@ app.delete('/blogs/:id', async (req, res) => {
       res.send(result);
     });
 
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log("Hoy Vai Connect Hoyce");
   } finally {
     // Uncomment this if you want to close connection when server stops
     // await client.close();
