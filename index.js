@@ -1,5 +1,5 @@
 
-require('dotenv').config();  // <-- Load environment variables from .env
+require('dotenv').config(); 
 
 const express = require('express');
 const cors = require('cors');
@@ -8,14 +8,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection URI from environment variables
 const uri = `mongodb+srv://${process.env.DB_User}:${process.env.DB_PASS}@cluster0.pwqz3ti.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
-// Create a MongoClient with Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -32,6 +29,7 @@ async function run() {
     const divisions = db.collection('alldevision');
     const createdonation = db.collection('createdonation');
     const blog = db.collection('blogsall');
+
 
 
     //blog Post
@@ -101,7 +99,7 @@ app.delete('/blogs/:id', async (req, res) => {
       res.send(result);
     });
 
-    // PATCH update user by ID (for status, role updates)
+    // PATCH update
     app.patch('/userall/:id', async (req, res) => {
       const id = req.params.id;
       const updates = req.body;
@@ -199,7 +197,7 @@ app.delete('/blogs/:id', async (req, res) => {
       }
     });
 
-    // CREATE new user (check duplicate by email)
+    // CREATE new user
     app.post('/userall', async (req, res) => {
       const user = req.body;
       const existingUser = await userCollectionall.findOne({ email: user.email });
@@ -291,12 +289,11 @@ app.delete('/blogs/:id', async (req, res) => {
 }
 run().catch(console.dir);
 
-// Default route
 app.get('/', (req, res) => {
   res.send('Blood Donation Server is Running');
 });
 
-// Start server
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
